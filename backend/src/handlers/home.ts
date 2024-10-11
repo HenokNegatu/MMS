@@ -18,28 +18,48 @@ interface JsonData {
     name: string
     created: Date
     modified: Date
+    dir: string  // Add this new property
 }
 
 export function getHomePage(req: Request, res: Response) {
+    const subDir = req.query.dir as string | undefined;
+    let currentDir = rootDir;
+
+    if (subDir) {
+        // Sanitize and validate the subDir
+        const sanitizedSubDir = path.normalize(subDir).replace(/^(\.\.(\/|\\|$))+/, '');
+        currentDir = path.join(rootDir, sanitizedSubDir);
+
+        // Check if the resulting path is still within rootDir
+        if (!currentDir.startsWith(rootDir)) {
+            res.status(400).send('Invalid directory');
+            return;
+        }
+    }
+
     let jsonDataArray: JsonData[] = [];
-    fs.readdir(rootDir, (error, files) => {
+    fs.readdir(currentDir, { withFileTypes: true }, (error, dirents) => {
         if (error) {
-            console.log(error)
-            res.sendStatus(500)
+            console.log(error);
+            res.status(error.code === 'ENOENT' ? 404 : 500).send(error.message);
+            return;
         }
-        for (const file of files) {
-            const fileStats = fs.statSync(path.join(rootDir, file));
+        for (const dirent of dirents) {
+            const filePath = path.join(currentDir, dirent.name);
+            const fileStats = fs.statSync(filePath);
+            const relativePath = path.relative(rootDir, path.dirname(filePath));
             const jsonData: JsonData = {
-                type: getFileType(fileStats, file),
+                type: getFileType(fileStats, dirent.name),
                 size: fileStats.size,
-                name: file,
+                name: dirent.name,
                 created: fileStats.ctime,
-                modified: fileStats.mtime
+                modified: fileStats.mtime,
+                dir: relativePath === '' ? '/' : '/' + relativePath.replace(/\\/g, '/')
             };
-            jsonDataArray.push(jsonData)
+            jsonDataArray.push(jsonData);
         }
-        res.send(JSON.stringify(jsonDataArray))
-    })
+        res.json(jsonDataArray);
+    });
 
     function getFileType(stats: fs.Stats, file: string): string {
         if (stats.isDirectory()) {

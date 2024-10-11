@@ -1,6 +1,5 @@
 import express, { Request, Response } from 'express'
-import home from './routes/app'
-import path from 'path';
+import home from './routes/app';
 
 
 const app = express()
