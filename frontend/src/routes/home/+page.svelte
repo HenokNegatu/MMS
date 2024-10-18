@@ -2,20 +2,13 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import * as Tooltip from '$lib/components/ui/tooltip';
+	import { Input } from "$lib/components/ui/input";
 	import {
-		Bell,
-		ChevronRight,
 		Download,
 		File,
 		Folder,
-		Home,
-		Library,
 		Music,
-		PlayCircle,
-		Search,
-		Settings,
 		Upload,
-		User,
 		Video
 	} from 'lucide-svelte';
 
@@ -33,11 +26,17 @@
       <Card.Header>
          <div class="flex justify-between items-center">
            <Card.Title>File Browser</Card.Title>
-           <Button variant="outline" size="sm">
-             <Upload class="h-4 w-4 mr-2" />
-             Upload
-           </Button>
+           <form action="?/upload" method="post" enctype="multipart/form-data" class="flex items-center justify-center gap-4">
+			<div class="grid w-full max-w-sm items-center gap-1.5">
+				<Input id="picture" type="file" name="file" required/>
+			  </div>
+			<Button type="submit" variant="outline" size="sm">
+				<Upload class="h-4 w-4 mr-2" />
+				Upload
+			  </Button>
+		   </form>
          </div>
+		 
          
        </Card.Header>
       <Card.Content class="m-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">

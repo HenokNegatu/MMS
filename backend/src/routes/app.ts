@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { getHomePage, uploadFile } from "../handlers/home";
+import { getHomePage, handleUpload } from "../handlers/home";
 
 const router = Router()
 
 router.get('/', getHomePage)
+router.post('/upload', handleUpload)
 
-router.post('/', uploadFile)
 
 export default router;

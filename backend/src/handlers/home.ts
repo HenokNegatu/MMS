@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import path from 'path';
 import * as fs from 'fs';
 import dotenv from 'dotenv';
+import multer from 'multer';
 
 dotenv.config();
 
@@ -72,6 +73,39 @@ export function getHomePage(req: Request, res: Response) {
     }
 }
 
-export function uploadFile(req: Request, res: Response) {
-    res.send('file posted!')
+
+const uploadDir = path.join(rootDir, 'uploads');
+
+// Configure multer storage
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        // Ensure the upload directory exists
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.originalname);
+    }
+});
+
+const upload = multer({ storage: storage });
+
+export function handleUpload(req: Request, res: Response) {
+    upload.single('file')(req, res, function (err) {
+        if (err instanceof multer.MulterError) {
+            console.log('Multer error:', err.message);
+            return res.status(500).json({ error: err.message });
+        } else if (err) {
+            console.log('Unknown error:', err.message);
+            return res.status(500).json({ error: 'An unknown error occurred when uploading.' });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file was uploaded.' });
+        }
+
+        res.json({ message: 'File uploaded successfully', file: req.file.filename });
+    });
 }
